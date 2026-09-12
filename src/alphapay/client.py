@@ -26,8 +26,8 @@ class AlphaPayClient:
     ...     amount=5000,
     ...     currency="XOF",
     ...     country="BJ",
-    ...     network="MTN_BJ",
-    ...     customer={"phone": "+22900000000", "full_name": "Client Test"},
+    ...     network="mtn_bj",
+    ...     customer={"email": "client@exemple.com", "first_name": "Client", "last_name": "Test", "phone": "+22900000000"},
     ...     idempotency_key=True,
     ... )
     """

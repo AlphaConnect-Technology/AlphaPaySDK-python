@@ -68,3 +68,18 @@ latence réseau réelle). À faire avant `pip publish`/`twine upload` :
 - [x] `list()`/`get()` des 9 ressources vérifiés en lecture seule contre une
       vraie clé live sur `api.alphapay.me` — formes de réponse et
       restrictions `dashboard_only` identiques aux SDK Node.js et PHP.
+- [x] 2026-09-12 — synchronisé avec le SDK PHP (commit "Add public payment
+      link features") : `payment_links.get_public()`/`create_public_checkout()`
+      (les 2 seules méthodes de cette ressource qui n'exigent PAS de clé
+      secrète — pensées pour un backend qui relaie ensuite le `slug` à un
+      client, jamais un front avec la clé en dur), `create()`/`update()`
+      étendus (`require_phone`, `facebook_pixel_id`, `google_ads_id`,
+      `custom_fields`, `show_confirmation_page`, `redirect_url`),
+      `webhook_endpoints.create()` + `payment_link`. 3 tests ajoutés
+      (14 au total), contre le même serveur de test local, mêmes réponses
+      que les tests PHP jumeaux. Au passage, clarifié en docstring (le SDK
+      Python passe des `dict` non typés, donc rien à corriger dans le code
+      lui-même) la forme exacte de `customer`/`recipient` sur
+      `payin_initialize`/`payout_initialize` — un bug équivalent (mauvaise
+      forme, `full_name` au lieu de `first_name`/`last_name`) a été trouvé
+      et corrigé dans les *types* du SDK Node à cette occasion.

@@ -31,13 +31,43 @@ payment = alphapay.transactions.payin_initialize(
     amount=5000,
     currency="XOF",
     country="BJ",
-    network="MTN_BJ",
-    customer={"full_name": "Ayaba Client", "phone": "+22900000000"},
+    network="mtn_bj",
+    customer={"email": "ayaba@exemple.com", "first_name": "Ayaba", "last_name": "Client", "phone": "+22900000000"},
     description="Commande #1234",
     idempotency_key=True,  # recommandé : évite un double push en cas de retry réseau
 )
 
 print(payment["status"])
+```
+
+### Options avancées des liens de paiement
+
+`payment_links.create()`/`update()` acceptent aussi `require_phone`,
+`facebook_pixel_id`, `google_ads_id`, `custom_fields`,
+`show_confirmation_page` et `redirect_url`. `get_public()`/
+`create_public_checkout()` sont les 2 seules méthodes de cette ressource qui
+n'exigent PAS de clé secrète (page publique du lien) — ne les appelez jamais
+depuis un front avec votre clé API en dur, seul `slug` doit y circuler.
+
+```python
+link = alphapay.payment_links.create(
+    name="Facture #42",
+    amount_type="FIXED",
+    amount=5000,
+    currency="XOF",
+    google_ads_id="AW-123456789",
+    custom_fields=[{"key": "reference_client", "label": "Référence client", "required": True}],
+)
+
+# Côté public (mobile/web), sans clé API :
+public_link = alphapay.payment_links.get_public(link["slug"])
+checkout = alphapay.payment_links.create_public_checkout(
+    link["slug"],
+    customer={"email": "client@exemple.com", "first_name": "Client", "last_name": "Test"},
+    custom_field_values={"reference_client": "CMD-42"},
+)
+# checkout["slug"] est une CheckoutSession one-shot : pilotez la suite (réseau, push,
+# statut) avec le SDK checkout public (mobile/web), jamais avec ce client à clé secrète.
 ```
 
 ## Sandbox vs live
@@ -128,6 +158,7 @@ dépôt versionné.
 |---|---|---|
 | `transactions` | `list`, `get`, `export`, `download_invoice`, `payin_initialize/payin_verify/payin_retry/payin_confirm_otp`, `payout_initialize/payout_verify` | ✅ |
 | `payment_links` | `list`, `create`, `get`, `update`, `delete` | ✅ |
+| `payment_links` | `get_public`, `create_public_checkout` | publiques (pas de clé requise) |
 | `checkout_sessions` | `list`, `create`, `get`, `cancel` | ✅ |
 | `customers` | `list`, `create`, `get`, `update`, `delete`, `transactions` | ✅ |
 | `settlements` | `list`, `create`, `get`, `cancel` | ❌ dashboard-only |

@@ -62,11 +62,26 @@ class _Handler(BaseHTTPRequestHandler):
         if self.path == "/always-429/":
             self._send_json(429, {"success": False, "error": {"detail": "Throttled"}, "code": 429}, {"Retry-After": "0"})
             return
+        if self.path == "/payment-links/public/demo-slug/":
+            self._send_json(
+                200,
+                {
+                    "success": True,
+                    "data": {
+                        "slug": "demo-slug",
+                        "facebook_pixel_id": "123456789012345",
+                        "google_ads_id": "AW-123456789",
+                        "custom_fields": [{"key": "reference_client", "label": "Référence client", "required": True}],
+                    },
+                    "code": 200,
+                },
+            )
+            return
         self._send_json(404, {"success": False, "error": {"detail": f"Not found: {self.path}"}, "code": 404})
 
     def do_POST(self) -> None:  # noqa: N802
         length = int(self.headers.get("Content-Length", 0))
-        self.rfile.read(length)  # corps ignoré -- ces routes ne le lisent pas, sauf echo-headers ci-dessous
+        raw_body = self.rfile.read(length)  # ignoré par la plupart des routes, sauf echo-headers/payment-links ci-dessous
 
         if self.path == "/settlements/":
             self._send_json(400, {"success": False, "error": {"amount": ["Ce champ est requis."]}, "code": 400})
@@ -77,6 +92,25 @@ class _Handler(BaseHTTPRequestHandler):
         if self.path == "/reset-counters/":
             _Handler.attempts.clear()
             self._send_json(200, {"success": True, "data": None, "code": 200})
+            return
+        if self.path == "/payment-links/":
+            body = json.loads(raw_body or b"{}")
+            self._send_json(201, {"success": True, "data": body, "code": 201})
+            return
+        if self.path == "/payment-links/public/demo-slug/checkout/":
+            body = json.loads(raw_body or b"{}")
+            self._send_json(
+                201,
+                {
+                    "success": True,
+                    "data": {
+                        "slug": "checkout-slug",
+                        "checkout_url": "https://checkout.example.test/checkout-slug",
+                        "received": body,
+                    },
+                    "code": 201,
+                },
+            )
             return
         self._send_json(404, {"success": False, "error": {"detail": f"Not found: {self.path}"}, "code": 404})
 

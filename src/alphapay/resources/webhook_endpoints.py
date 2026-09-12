@@ -61,19 +61,37 @@ class WebhookEndpointsResource:
     def list(self, **params: Any) -> Dict[str, Any]:
         return self._http.request("GET", "/merchant-webhooks/", query=params)
 
-    def create(self, *, url: str, environment: str, description: Optional[str] = None, signing_secret: Optional[str] = None) -> Dict[str, Any]:
+    def create(
+        self,
+        *,
+        url: str,
+        environment: str,
+        description: Optional[str] = None,
+        signing_secret: Optional[str] = None,
+        payment_link: Optional[str] = None,
+    ) -> Dict[str, Any]:
         """ATTENTION : dashboard-only -- 403 via clé API.
         ``signing_secret`` n'est présent en clair dans la réponse qu'à la
         création (ou après :meth:`rotate_secret`) -- jamais récupérable ensuite.
+        ``payment_link`` (id) restreint ce endpoint aux événements d'UN lien
+        de paiement précis -- omis : tous les liens du marchand.
         """
-        body = {k: v for k, v in dict(url=url, description=description, environment=environment, signing_secret=signing_secret).items() if v is not None}
+        body = {
+            k: v
+            for k, v in dict(
+                url=url, description=description, environment=environment,
+                signing_secret=signing_secret, payment_link=payment_link,
+            ).items()
+            if v is not None
+        }
         return self._http.request("POST", "/merchant-webhooks/", body=body)
 
     def get(self, id: str) -> Dict[str, Any]:
         return self._http.request("GET", f"/merchant-webhooks/{id}/")
 
     def update(self, id: str, **params: Any) -> Dict[str, Any]:
-        """ATTENTION : dashboard-only -- 403 via clé API."""
+        """ATTENTION : dashboard-only -- 403 via clé API. Accepte aussi
+        ``payment_link`` (id, ou ``None`` pour retirer la restriction)."""
         return self._http.request("PATCH", f"/merchant-webhooks/{id}/", body=params)
 
     def rotate_secret(self, id: str) -> Dict[str, Any]:

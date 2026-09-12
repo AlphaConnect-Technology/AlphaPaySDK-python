@@ -73,6 +73,11 @@ class TransactionsResource:
         checkout à suivre. ``idempotency_key`` fortement recommandée : un
         doublon pousse un second prompt de paiement vers le client final.
 
+        ``customer`` -- cf. ``SoftpayCustomerSerializer`` : ``email``,
+        ``first_name``, ``last_name`` et ``phone`` sont tous les 4
+        OBLIGATOIRES (pas de page hébergée où le client les saisirait
+        lui-même après coup). Il n'y a PAS de champ ``full_name`` côté API.
+
         Retourne ``{"message", "id", "status", "checkout_url", "instructions"}``
         -- PAS une transaction complète.
         """
@@ -124,6 +129,12 @@ class TransactionsResource:
         """Déclenche un retrait -- débite immédiatement le wallet marchand
         (réservation de solde). ``idempotency_key`` fortement recommandée :
         sans elle, un doublon débite deux fois le MÊME wallet.
+
+        ``customer`` -- cf. ``CustomerCheckoutSerializer`` : ``email``,
+        ``first_name``, ``last_name`` requis, ``phone`` optionnel (pas de
+        champ ``full_name``). ``recipient`` -- cf. ``RecipientSerializer`` :
+        UN SEUL champ, ``{"msisdn": "..."}`` -- c'est ``method`` qui porte le
+        réseau/la banque, pas ``recipient``.
 
         Retourne ``{"message", "id"}``.
         """

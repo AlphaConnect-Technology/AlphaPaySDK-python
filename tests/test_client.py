@@ -39,6 +39,40 @@ class ClientTest(unittest.TestCase):
         tx = client.transactions.get("tx_1")
         self.assertEqual(tx, {"id": "tx_1", "reference": "REF1"})
 
+    def test_reads_public_payment_link_options(self) -> None:
+        client = AlphaPayClient("sk_test_abc", self.base_url)
+        link = client.payment_links.get_public("demo-slug")
+        self.assertEqual(link["facebook_pixel_id"], "123456789012345")
+        self.assertEqual(link["google_ads_id"], "AW-123456789")
+        self.assertEqual(
+            link["custom_fields"], [{"key": "reference_client", "label": "Référence client", "required": True}]
+        )
+
+    def test_sends_payment_link_tracking_and_custom_fields(self) -> None:
+        client = AlphaPayClient("sk_test_abc", self.base_url)
+        link = client.payment_links.create(
+            name="Lien de test",
+            amount_type="FIXED",
+            amount=5000,
+            currency="XOF",
+            facebook_pixel_id="123456789012345",
+            google_ads_id="AW-123456789",
+            custom_fields=[{"key": "reference_client", "label": "Référence client", "required": True}],
+        )
+        self.assertEqual(link["facebook_pixel_id"], "123456789012345")
+        self.assertEqual(link["google_ads_id"], "AW-123456789")
+        self.assertEqual(link["custom_fields"][0]["key"], "reference_client")
+
+    def test_creates_checkout_from_public_payment_link(self) -> None:
+        client = AlphaPayClient("sk_test_abc", self.base_url)
+        result = client.payment_links.create_public_checkout(
+            "demo-slug",
+            customer={"email": "client@example.com", "first_name": "Client", "last_name": "Test"},
+            custom_field_values={"reference_client": "CMD-42"},
+        )
+        self.assertEqual(result["slug"], "checkout-slug")
+        self.assertEqual(result["received"]["custom_field_values"]["reference_client"], "CMD-42")
+
     def test_maps_a_400_field_validation_error(self) -> None:
         client = AlphaPayClient("sk_test_abc", self.base_url)
         with self.assertRaises(AlphaPayValidationError) as ctx:

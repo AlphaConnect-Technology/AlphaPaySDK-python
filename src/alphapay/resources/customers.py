@@ -16,6 +16,10 @@ class CustomersResource:
     def create(
         self, *, country: str, phone: Optional[str] = None, full_name: Optional[str] = None, email: Optional[str] = None
     ) -> Dict[str, Any]:
+        """``country`` -- UUID de ``geo.Country`` (ForeignKey côté API), PAS un
+        code ISO2 ("BJ") -- à la différence de ``country`` sur les transactions/
+        paiements. Référentiel pas encore couvert par ce SDK.
+        """
         body = {k: v for k, v in dict(country=country, phone=phone, full_name=full_name, email=email).items() if v is not None}
         return self._http.request("POST", "/customers/", body=body)
 
