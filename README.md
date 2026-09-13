@@ -1,4 +1,4 @@
-# alphapay-python
+# alphapay
 
 SDK Python officiel pour l'API AlphaPay (agrégateur de paiement multi-gateway).
 
