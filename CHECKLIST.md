@@ -20,9 +20,11 @@ latence réseau réelle). À faire avant `pip publish`/`twine upload` :
       une clé live testée en lecture seule pour ne rien déclencher de réel).
 - [ ] Vérifier le nom exact des codes réseau (`network`) et méthodes de
       payout (`method`) attendus par l'API — documentés comme chaînes libres.
-- [ ] Choisir le nom de package PyPI définitif (`alphapay` est optimiste --
-      probablement déjà pris ; prévoir un repli type `alphapay-sdk` ou
-      `alphapay-payments`).
+- [x] 2026-09-13 — Nom de package PyPI vérifié : **`alphapay`** (celui déjà
+      dans `pyproject.toml`) est **disponible** — `GET
+      https://pypi.org/pypi/alphapay/json` renvoie 404 (nom libre), pas de
+      blocage équivalent au scope `@alphapay` déjà pris côté npm (voir
+      CHECKLIST du SDK Node). Rien à renommer avant `twine upload`.
 - [ ] `pyproject.toml` déclare `requires-python = ">=3.8"` — non testé sur
       autre chose que 3.10 dans cette session (seule version Python
       disponible ici). `from __future__ import annotations` couvre les
@@ -83,3 +85,15 @@ latence réseau réelle). À faire avant `pip publish`/`twine upload` :
       `payin_initialize`/`payout_initialize` — un bug équivalent (mauvaise
       forme, `full_name` au lieu de `first_name`/`last_name`) a été trouvé
       et corrigé dans les *types* du SDK Node à cette occasion.
+- [x] 2026-09-13 — `alphapay-python-demo` (`pip install -e
+      ../AlphaPaySDK-python`) revérifié de bout en bout contre une vraie clé
+      LIVE : `payment_links.create()` + `get_public()` (flux du demo
+      lui-même), plus `balances.list()` et `checkout_sessions.create()` en
+      complément (mêmes vérifications que côté SDK Node) — tout fonctionne,
+      aucune régression après la synchronisation PHP.
+- [x] 2026-09-13 — `EXAMPLES.md` créé : 9 exemples Python complets
+      (checkout, softpay, lien de paiement, solde, clients, webhooks,
+      reversements/transferts wallet, clés API/whitelist IP, gestion des
+      erreurs) — syntaxe validée (`python -m py_compile`) et chaque chaîne
+      d'attributs (`alphapay.<ressource>.<méthode>`) confirmée existante par
+      introspection sur le vrai module installé, pas seulement relue.
