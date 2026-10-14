@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import threading
+from urllib.parse import parse_qsl, urlsplit
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Optional
 
@@ -77,6 +78,27 @@ class _Handler(BaseHTTPRequestHandler):
                 },
             )
             return
+        if urlsplit(self.path).path == "/wallet-transfers/":
+            query = dict(parse_qsl(urlsplit(self.path).query))
+            self._send_json(
+                200,
+                {
+                    "success": True,
+                    "data": {"count": 1, "next": None, "previous": None, "results": [{"id": "wt_1", "echo_query": query}]},
+                    "code": 200,
+                },
+            )
+            return
+        if self.path == "/wallet-transfers/wt_1/":
+            self._send_json(
+                200,
+                {
+                    "success": True,
+                    "data": {"id": "wt_1", "status": "COMPLETED", "to_amount": "9800", "fee_amount": "200", "auto_approved_via": "MERCHANT"},
+                    "code": 200,
+                },
+            )
+            return
         self._send_json(404, {"success": False, "error": {"detail": f"Not found: {self.path}"}, "code": 404})
 
     def do_POST(self) -> None:  # noqa: N802
@@ -96,6 +118,37 @@ class _Handler(BaseHTTPRequestHandler):
         if self.path == "/payment-links/":
             body = json.loads(raw_body or b"{}")
             self._send_json(201, {"success": True, "data": body, "code": 201})
+            return
+        if self.path == "/wallet-transfers/":
+            # Reflète WalletTransferListCreateView : refus métier -> 422
+            # {"message", "code"} (SettlementError), sinon 201.
+            body = json.loads(raw_body or b"{}")
+            if body["from_country"] == body["to_country"]:
+                self._send_json(
+                    422,
+                    {
+                        "success": False,
+                        "error": {"message": "Le pays source et le pays cible doivent être différents.", "code": "same_country"},
+                        "code": 422,
+                    },
+                )
+                return
+            self._send_json(
+                201,
+                {
+                    "success": True,
+                    "data": {
+                        "id": "wt_1",
+                        "from_country": body["from_country"],
+                        "to_country": body["to_country"],
+                        "from_amount": str(body["from_amount"]),
+                        "status": "PENDING",
+                        # Pas un champ de l'API : permet au test de vérifier le header envoyé.
+                        "echo_idempotency_key": self.headers.get("Idempotency-Key"),
+                    },
+                    "code": 201,
+                },
+            )
             return
         if self.path == "/payment-links/public/demo-slug/checkout/":
             body = json.loads(raw_body or b"{}")

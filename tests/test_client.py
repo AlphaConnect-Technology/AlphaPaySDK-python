@@ -8,6 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from alphapay import AlphaPayClient, AlphaPayRateLimitError, AlphaPayValidationError  # noqa: E402
 from alphapay.pagination import paginate  # noqa: E402
+from alphapay.resources.wallet_transfers import WalletTransfersResource  # noqa: E402
 
 from server import TestServer  # noqa: E402
 
@@ -94,6 +95,33 @@ class ClientTest(unittest.TestCase):
         client = AlphaPayClient("sk_test_abc", self.base_url)
         result = client.http.request("POST", "/echo-headers/", body={}, idempotency_key=True)
         self.assertTrue(result["idempotency_key"])
+
+    def test_creates_a_wallet_transfer_with_an_idempotency_key(self) -> None:
+        client = AlphaPayClient("sk_test_abc", self.base_url)
+        transfer = client.wallet_transfers.create(
+            from_country="BJ", to_country="CM", from_amount=10000, idempotency_key="wt-intent-42"
+        )
+        self.assertEqual(transfer["status"], WalletTransfersResource.STATUS_PENDING)
+        self.assertEqual(transfer["to_country"], "CM")
+        self.assertEqual(transfer["echo_idempotency_key"], "wt-intent-42")
+
+    def test_maps_a_wallet_transfer_business_refusal_with_its_code(self) -> None:
+        client = AlphaPayClient("sk_test_abc", self.base_url)
+        with self.assertRaises(AlphaPayValidationError) as ctx:
+            client.wallet_transfers.create(from_country="BJ", to_country="BJ", from_amount=10000)
+        self.assertEqual(ctx.exception.status, 422)
+        self.assertEqual(ctx.exception.error_code, "same_country")
+
+    def test_lists_wallet_transfers_with_country_and_status_filters(self) -> None:
+        client = AlphaPayClient("sk_test_abc", self.base_url)
+        page = client.wallet_transfers.list(status="PENDING", from_country="BJ", to_country="CM")
+        self.assertEqual(page["results"][0]["echo_query"], {"status": "PENDING", "from_country": "BJ", "to_country": "CM"})
+
+    def test_gets_a_wallet_transfer_status(self) -> None:
+        client = AlphaPayClient("sk_test_abc", self.base_url)
+        transfer = client.wallet_transfers.get("wt_1")
+        self.assertEqual(transfer["status"], WalletTransfersResource.STATUS_COMPLETED)
+        self.assertEqual(transfer["fee_amount"], "200")
 
     def test_paginate_follows_the_cursor_based_next_link(self) -> None:
         client = AlphaPayClient("sk_test_abc", self.base_url)

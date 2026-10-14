@@ -1,7 +1,7 @@
 # Avant publication PyPI
 
 Ce SDK est fonctionnel et testé (`python -m unittest discover -s tests` :
-11/11 tests, contre un vrai serveur HTTP local — pas un mock, cf.
+18/18 tests, contre un vrai serveur HTTP local — pas un mock, cf.
 `tests/server.py`, lancé dans un thread du process de test).
 `list()`/`get()` des 9 ressources ont aussi été vérifiés en lecture seule
 contre une vraie clé LIVE sur `api.alphapay.me` — mêmes résultats que les
@@ -97,3 +97,12 @@ latence réseau réelle). À faire avant `pip publish`/`twine upload` :
       erreurs) — syntaxe validée (`python -m py_compile`) et chaque chaîne
       d'attributs (`alphapay.<ressource>.<méthode>`) confirmée existante par
       introspection sur le vrai module installé, pas seulement relue.
+- [x] 2026-10-15 — `wallet_transfers` aligné sur AlphaPayBack `main`
+      (2026-09-24) : ouvert à la clé API (`create()` = scope PAYOUT/BOTH,
+      `list()`/`get()` = toute clé), plus `dashboard_only`. Constantes
+      `STATUS_*`, filtres `from_country`/`to_country` documentés, codes 422
+      et frais documentés. 4 tests ajoutés (18 au total), mêmes scénarios
+      que les tests PHP jumeaux. Version 0.1.1.
+- [ ] Vérifier `wallet_transfers.list()`/`get()` contre une vraie clé live
+      (lecture seule). **Jamais `create()` en live** : réserverait/déplacerait
+      réellement des fonds.
