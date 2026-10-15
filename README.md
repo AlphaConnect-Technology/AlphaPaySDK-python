@@ -6,8 +6,7 @@ SDK Python officiel pour l'API AlphaPay (agrégateur de paiement multi-gateway).
 > principales (paiements, retraits, liens de paiement, checkout, clients,
 > webhooks). Conçu en miroir des SDK [Node.js](../AlphaPaySDK-node) et
 > [PHP](../AlphaPaySDK-php) — mêmes garanties, mêmes restrictions d'API
-> découvertes en conditions réelles. Voir [CHECKLIST.md](./CHECKLIST.md)
-> pour ce qui manque avant une publication PyPI.
+> découvertes en conditions réelles.
 
 Aucune dépendance runtime — uniquement la bibliothèque standard (`urllib`),
 pas de `requests`. Python 3.8+.
